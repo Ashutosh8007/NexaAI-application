@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexaai-inference
+  namespace: nexaai
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nexaai-inference
+  template:
+    metadata:
+      labels:
+        app: nexaai-inference
+    spec:
+      containers:
+        - name: inference
+          image: nexaai-lab:dev
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "app.inference.main:app", "--host", "0.0.0.0", "--port", "8082"]
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: nexaai-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexaai-inference
+  namespace: nexaai
+spec:
+  selector:
+    app: nexaai-inference
+  ports:
+    - port: 8082
+      targetPort: 8082

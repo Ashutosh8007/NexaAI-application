@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexaai-documents
+  namespace: nexaai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexaai-documents
+  template:
+    metadata:
+      labels:
+        app: nexaai-documents
+    spec:
+      containers:
+        - name: documents
+          image: nexaai-lab:dev
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "app.documents.main:app", "--host", "0.0.0.0", "--port", "8083"]
+          ports:
+            - containerPort: 8083
+          env:
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: nexaai-config
+                  key: REDIS_URL
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8083
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexaai-documents
+  namespace: nexaai
+spec:
+  selector:
+    app: nexaai-documents
+  ports:
+    - port: 8083
+      targetPort: 8083

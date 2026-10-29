@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexaai-auth
+  namespace: nexaai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexaai-auth
+  template:
+    metadata:
+      labels:
+        app: nexaai-auth
+    spec:
+      containers:
+        - name: auth
+          image: nexaai-lab:dev
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "app.auth.main:app", "--host", "0.0.0.0", "--port", "8081"]
+          ports:
+            - containerPort: 8081
+          env:
+            - name: DEMO_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: nexaai-demo-secret
+                  key: DEMO_API_TOKEN
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexaai-auth
+  namespace: nexaai
+spec:
+  selector:
+    app: nexaai-auth
+  ports:
+    - port: 8081
+      targetPort: 8081
