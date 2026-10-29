@@ -1,0 +1,71 @@
+services:
+  gateway:
+    build: .
+    command: ["uvicorn", "app.gateway.main:app", "--host", "0.0.0.0", "--port", "8080"]
+    environment:
+      AUTH_URL: http://auth:8081
+      INFERENCE_URL: http://inference:8082
+      DOCUMENTS_URL: http://documents:8083
+      DEMO_API_TOKEN: ${DEMO_API_TOKEN:-local-demo-token}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth
+      - inference
+      - documents
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  auth:
+    build: .
+    command: ["uvicorn", "app.auth.main:app", "--host", "0.0.0.0", "--port", "8081"]
+    environment:
+      DEMO_API_TOKEN: ${DEMO_API_TOKEN:-local-demo-token}
+    expose: ["8081"]
+    restart: unless-stopped
+
+  inference:
+    build: .
+    command: ["uvicorn", "app.inference.main:app", "--host", "0.0.0.0", "--port", "8082"]
+    environment:
+      INFERENCE_DELAY_SECONDS: ${INFERENCE_DELAY_SECONDS:-0}
+    expose: ["8082"]
+    restart: unless-stopped
+
+  documents:
+    build: .
+    command: ["uvicorn", "app.documents.main:app", "--host", "0.0.0.0", "--port", "8083"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    expose: ["8083"]
+    depends_on: [redis]
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.worker.main"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      WORKER_INTERVAL_SECONDS: "2"
+    depends_on: [redis]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    expose: ["6379"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis-data:
