@@ -1,143 +1,90 @@
-# NexaAI — DevOps Scenario-Based Interview Lab
+# NexaAI DevOps Scenario Lab
 
-A deliberately small but production-shaped AI microservices platform for practicing **DevOps troubleshooting**, not application feature development.
+**A practical, scenario-driven DevOps lab for learning real-world troubleshooting and production incident management.**
 
-> Terraform is intentionally excluded. Infrastructure provisioning with Terraform can be practiced separately.
+## About the Project
 
-## What you will operate
+NexaAI DevOps Scenario Lab is a hands-on learning environment designed to simulate real-world DevOps challenges using an AI-powered microservices application. Instead of focusing on application development, this project emphasizes the operational side of DevOps engineering: diagnosing failures, analyzing logs, troubleshooting infrastructure, managing deployments, and restoring service availability.
 
-- **API Gateway** — public entry point and request routing
-- **Auth Service** — validates a demo API token
-- **Inference Service** — simulates an AI model endpoint and can be made slow/unhealthy
-- **Document Service** — simulates document ingestion/status
-- **Redis** — cache/queue dependency
-- **Worker** — background document processing simulation
-- **Docker Compose** for local incidents
-- **Kubernetes manifests** for cluster incidents
-- **GitHub Actions** for tests, image build, security scanning, and manifest checks
-- **Shell scripts** for health checks, log analysis, resource checks, and controlled fault injection
+The application consists of multiple containerized services, including an API Gateway, authentication service, simulated AI inference service, document service, background worker, and Redis. These components provide a realistic environment for investigating service failures, connectivity issues, latency, resource constraints, and deployment problems.
 
-The application is intentionally lightweight. It does **not** download or run a large language model; the inference endpoint simulates an AI backend so you can focus on deployment, networking, reliability, observability, and incident response.
+## Objectives
 
-## Quick start
+- Develop practical troubleshooting skills for DevOps Engineer interviews.
+- Understand how to investigate incidents using logs, metrics, health checks, and diagnostic commands.
+- Practice CI/CD pipeline development and troubleshooting with GitHub Actions.
+- Build, run, inspect, and debug Docker containers.
+- Deploy and troubleshoot applications on Kubernetes.
+- Improve Linux administration and shell scripting skills.
+- Learn container security scanning and deployment validation.
+- Simulate production incidents and practice safe recovery procedures.
 
-Requirements: Git, Docker Desktop/Engine with Compose, Python 3.11+ (optional for local tests), and `kubectl` plus kind or minikube for Kubernetes labs.
+## Technology Stack
 
-```bash
-docker compose up --build -d
-docker compose ps
-curl -i http://localhost:8080/health
-curl -i http://localhost:8080/api/ask -H 'Content-Type: application/json' \
-  -d '{"question":"How do I troubleshoot a failed deployment?"}'
-curl -i http://localhost:8080/api/documents
-docker compose logs --tail=100
-```
+- **CI/CD:** GitHub Actions
+- **Containers:** Docker, Docker Compose
+- **Orchestration:** Kubernetes
+- **Programming and scripting:** Python, Bash, YAML
+- **Application services:** FastAPI-based microservices
+- **Caching and queues:** Redis
+- **Security:** Trivy container image scanning
+- **Deployment validation:** kubeconform
+- **Troubleshooting:** Linux commands, application logs, health checks, Kubernetes diagnostics
 
-Stop the stack:
+## Scenarios Covered
 
-```bash
-docker compose down
-```
+The initial lab includes scenarios such as:
 
-## Suggested practice loop
+- Docker containers exiting unexpectedly
+- API Gateway returning HTTP 502 errors
+- Kubernetes CrashLoopBackOff and Pending pods
+- Failed readiness probes and image pulls
+- Service discovery and DNS connectivity issues
+- High latency and request timeouts
+- Redis connectivity failures
+- CPU, memory, and disk pressure
+- GitHub Actions pipeline failures
+- Security scan failures
+- Failed deployments and rollbacks
+- Configuration and secrets mismatches
+- Background queue backlogs
+- TLS and certificate issues
+- Log analysis across multiple services
 
-1. Start from a healthy baseline.
-2. Read a scenario in [`scenarios/`](scenarios/).
-3. Inject only the specified fault.
-4. Do **not** read the resolution immediately. Collect evidence first.
-5. Write a short incident update: impact, scope, evidence, mitigation, root cause, prevention.
-6. Fix the issue and verify recovery with health checks, logs, and a repeat request.
-7. Explain your decision-making aloud as if the interviewer were the incident commander.
+## How to Practice
 
-## Repository map
+1. Start the application using Docker Compose.
+2. Verify service health and inspect application logs.
+3. Reproduce a scenario using the provided instructions.
+4. Diagnose the issue using Linux, Docker, networking, or Kubernetes commands.
+5. Identify the root cause using evidence rather than assumptions.
+6. Apply the safest fix and validate service recovery.
+7. Document the root cause, resolution, and preventive actions.
 
-```text
-.
-├── .github/workflows/ci.yml
-├── app/
-│   ├── gateway/       # Public API gateway
-│   ├── auth/          # Demo auth service
-│   ├── inference/     # Simulated AI inference service
-│   ├── documents/     # Document API
-│   └── worker/        # Background worker
-├── deploy/
-│   └── k8s/           # Kubernetes Deployment, Service, ConfigMap, probes, resources
-├── scripts/           # Operational shell tools and fault injectors
-├── scenarios/         # Interview incident playbooks
-├── tests/             # Basic smoke/unit tests
-├── Dockerfile
-└── compose.yaml
-```
+## Learning Approach
 
-## GitHub setup
+Each scenario is intended to encourage a structured incident-response workflow:
 
-This package is ready to push to a repository you create in your GitHub account:
+**Understand the symptoms → Gather evidence → Identify the failing component → Find the root cause → Apply a fix → Validate recovery → Prevent recurrence.**
 
-```bash
-git init
-git add .
-git commit -m "Initial NexaAI DevOps scenario lab"
-git branch -M main
-git remote add origin https://github.com/<YOUR_USERNAME>/nexaai-devops-scenario-lab.git
-git push -u origin main
-```
+The goal is not simply to memorize commands, but to develop the troubleshooting approach expected of a DevOps Engineer working with real applications and production environments.
 
-Create an empty GitHub repository named `nexaai-devops-scenario-lab` first. Do not add a README/license from GitHub if you are pushing this existing initial commit.
+## Future Enhancements
 
-## GitHub Actions
+- Additional scenario-based incidents
+- Prometheus and Grafana monitoring exercises
+- More advanced Kubernetes troubleshooting
+- CI/CD deployment and rollback simulations
+- Automated health checks and incident reports
+- AI-assisted log analysis and root-cause investigation
+- Interview-style troubleshooting exercises with increasing difficulty
 
-The workflow in `.github/workflows/ci.yml` runs on pull requests and pushes:
-- Python syntax and unit tests
-- Docker image build
-- Trivy filesystem scan (findings are reported; the initial lab does not fail on every finding)
-- Kubernetes YAML validation with `kubeconform`
+## Intended Audience
 
-The workflow does not publish images or deploy to a real cluster by default. Add publishing/deployment only after you understand the workflow and configure repository secrets/environments safely.
+- Aspiring DevOps Engineers
+- Junior Cloud and Infrastructure Engineers
+- Engineers preparing for DevOps interviews
+- Developers learning containerization and deployment operations
+- Anyone seeking practical experience with incident troubleshooting
 
-## Kubernetes practice
-
-For kind, build and load the image:
-
-```bash
-docker build -t nexaai-lab:dev .
-kind create cluster --name nexaai
-kind load docker-image nexaai-lab:dev --name nexaai
-kubectl apply -f deploy/k8s/
-kubectl get pods,svc
-kubectl port-forward svc/nexaai-gateway 8080:80
-```
-
-The base manifests use `imagePullPolicy: IfNotPresent`. If your cluster is not kind, update the image strategy to match your registry.
-
-## Safety rules for fault injection
-
-- Use only your local lab or a disposable practice cluster.
-- Never run chaos commands against a work, shared, or production cluster.
-- Read every script before running it.
-- Some scenarios intentionally create broken configurations. Keep a clean Git commit so you can reset with `git checkout -- .`.
-- Avoid putting credentials, tokens, kubeconfigs, or cloud keys in source control.
-
-## Scenario catalogue
-
-| ID | Incident | Main skills |
-|---|---|---|
-| 01 | Container exits immediately | Docker entrypoint, logs, exit codes |
-| 02 | Gateway returns 502 | service DNS, port mapping, dependencies |
-| 03 | Kubernetes CrashLoopBackOff | events, logs, probes, config |
-| 04 | Pods stuck Pending | requests/limits, scheduling, events |
-| 05 | Readiness probe fails | probes, app port, endpoints |
-| 06 | ImagePullBackOff | tags, registry auth, imagePullPolicy |
-| 07 | DNS/network connectivity issue | CoreDNS, Services, NetworkPolicy concepts |
-| 08 | High latency / timeout | dependency latency, timeout budgets, concurrency |
-| 09 | Redis unavailable | dependency failure, graceful degradation |
-| 10 | Disk pressure / log growth | Linux disk tools, container logs |
-| 11 | CPU/memory pressure | top, ps, kubectl top, limits/OOMKilled |
-| 12 | CI pipeline fails | GitHub Actions logs, exit codes, caching |
-| 13 | Security scan blocks release | Trivy findings, triage, risk-based remediation |
-| 14 | Bad rollout / rollback | rollout status/history/undo |
-| 15 | Secret/config drift | environment variables, Kubernetes Secret hygiene |
-| 16 | Background queue backlog | worker health, throughput, retries |
-| 17 | Certificate / TLS failure | expiry, chain, hostname, trust store |
-| 18 | 100 services / noisy logs | structured logs, correlation IDs, aggregation |
-
-See each scenario file for **symptoms, first 5 minutes, commands, fault injection, success criteria, and interview answer structure**.
+**Note:** This is a learning and simulation project. Validate configurations and security settings before adapting them to production environments.
