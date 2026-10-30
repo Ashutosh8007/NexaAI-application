@@ -8,7 +8,7 @@ services:
       DOCUMENTS_URL: http://documents:8083
       DEMO_API_TOKEN: ${DEMO_API_TOKEN:-local-demo-token}
     ports:
-      - "8080:8080"
+      - "8088:8080"
     depends_on:
       - auth
       - inference
