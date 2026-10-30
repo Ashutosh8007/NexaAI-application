@@ -27,7 +27,9 @@ jobs:
       - name: Compile Python
         run: python -m compileall -q app tests
       - name: Run tests
-        run: pytest -q
+        run: python -m pytest -q
+        env:
+          PYTHONPATH: .
 
   docker-build:
     name: Build container image
